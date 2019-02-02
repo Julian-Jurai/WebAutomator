@@ -1,0 +1,14 @@
+{
+  "name": "web_automator",
+  "version": "1.0.0",
+  "description": "Used to inject javascript to a headless broswer for automation",
+  "main": "index.js",
+  "scripts": {
+    "test": "npm t"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "puppeteer": "^1.12.1"
+  }
+}
