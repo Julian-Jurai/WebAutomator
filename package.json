@@ -3,12 +3,24 @@
   "version": "1.0.0",
   "description": "Used to inject javascript to a headless broswer for automation",
   "main": "index.js",
+  "bin": {
+    "autologin": "bin/cli.js"
+  },
   "scripts": {
-    "test": "npm t"
+    "start": "node index.js"
   },
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "puppeteer": "^1.12.1"
+    "password-prompt": "^1.0.7",
+    "puppeteer": "^1.12.1",
+    "request": "^2.88.0",
+    "spoof": "2.0.1",
+    "wifi-control": "^2.0.1"
+  },
+  "devDependencies": {
+    "babel-polyfill": "^6.26.0",
+    "babel-preset-env": "^1.7.0",
+    "babel-register": "^6.26.0"
   }
 }
