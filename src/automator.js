@@ -5,6 +5,7 @@ import greaseMonkeyScript, { metadata } from "./lib/greaseMonkeyScript";
 import { Status } from "./main";
 
 const NEVERSSL = "http://neverssl.com";
+const TIMEOUT = 90 * 1000;
 
 const isNetworkConnected = async () => {
   let networkConnected = isWifiConnected();
@@ -34,6 +35,7 @@ const isNetworkConnected = async () => {
 const puppeteerInit = async () => {
   const browser = await puppeteer.launch();
   const page = await browser.newPage();
+  page.setDefaultTimeout(TIMEOUT);
   return { browser, page };
 };
 
@@ -51,20 +53,30 @@ const automator = async () => {
   Status.INPROGESS = true;
   await spoof();
   console.log("4. Spoofed: 💨");
+
   await isNetworkConnected();
   console.log("5. Network Connected 📡");
-  const { browser, page } = await puppeteerInit();
 
+  const { browser, page } = await puppeteerInit();
   injectGreaseMonkeyScript(page);
 
-  await goToNeverSSL(page);
-  console.log("6. Going to Portal 💼");
+  try {
+    await goToNeverSSL(page);
+    console.log("6. Start Navigation 🔭");
 
-  await browser.waitForTarget(target => target.url() === metadata.completedUrl);
-  console.log("7. Session Restored ✅");
-  await page.close();
-  await browser.close();
-  console.log("🤖  👍");
+    await browser.waitForTarget(
+      target => target.url() === metadata.completedUrl
+    );
+    console.log("7. Session Restored ✅");
+
+    console.log("🤖  👍");
+  } catch (e) {
+    console.error("🤢", e);
+  } finally {
+    await page.close();
+    await browser.close();
+  }
+
   Status.INPROGESS = false;
 };
 
