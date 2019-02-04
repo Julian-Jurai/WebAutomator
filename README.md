@@ -1,10 +1,12 @@
 # Web Automotor
-
-powered by [Puppetter](https://github.com/GoogleChrome/puppeteer)
+_powered by [Puppetter](https://github.com/GoogleChrome/puppeteer)_
 
 ## What is it?
 
-Its essentally operates like a userscript manager ([greasemonkey](https://en.wikipedia.org/wiki/Greasemonkey)) but on your localmachine in a headless browser environment.
+It essentally operates like a userscript manager ([greasemonkey](https://en.wikipedia.org/wiki/Greasemonkey)) but on your local machine in a headless browser environment. For anonymity the the MAC is spoofed.  
+
+## 🤖
+<img src="./Demo.gif">
 
 ## Getting Started
 
