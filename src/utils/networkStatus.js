@@ -28,8 +28,33 @@ export const isWifiConnected = (withLogging = false) => {
     success = false;
   }
 
-  withLogging && console.log("Wifi connected:", success ? "✅" : "❌");
+  withLogging && console.log("Network connected:", success ? "✅" : "❌");
   return success;
+};
+
+export const isWifiConnectedAsync = async () => {
+  let networkConnected = isWifiConnected();
+  let timeout = 20 * 1000;
+  let counter = 0;
+  let interval;
+
+  if (!networkConnected) {
+    await new Promise((resolve, reject) => {
+      interval = setInterval(() => {
+        counter += 1;
+        networkConnected = isWifiConnected();
+
+        if (counter > timeout) {
+          throw Error(`Timeout error, network connection not established`);
+        }
+
+        if (networkConnected) {
+          clearInterval(interval);
+          resolve();
+        }
+      }, 2000);
+    });
+  }
 };
 
 export const isInternetConnectedAsync = (withLogging = false) =>

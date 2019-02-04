@@ -1,45 +1,16 @@
-import puppeteer from "puppeteer";
+import { puppeteerInit } from "./puppeteerSetup";
 import spoof from "./utils/spoof";
-import { isWifiConnected } from "./utils/networkStatus";
+import stringVoke from "./utils/stringVoke";
+import notifyer from "./utils/notifyer";
+
+import {
+  isWifiConnectedAsync,
+  isInternetConnectedAsync
+} from "./utils/networkStatus";
 import greaseMonkeyScript, { metadata } from "./lib/greaseMonkeyScript";
 import { Status } from "./main";
 
 const NEVERSSL = "http://neverssl.com";
-const TIMEOUT = 90 * 1000;
-
-const isNetworkConnected = async () => {
-  let networkConnected = isWifiConnected();
-  let timeout = 20 * 1000;
-  let counter = 0;
-  let interval;
-
-  if (!networkConnected) {
-    await new Promise((resolve, reject) => {
-      interval = setInterval(() => {
-        counter += 1;
-        networkConnected = isWifiConnected();
-
-        if (counter > timeout) {
-          throw Error(`Timeout error, network connection not established`);
-        }
-
-        if (networkConnected) {
-          clearInterval(interval);
-          resolve();
-        }
-      }, 2000);
-    });
-  }
-};
-
-const puppeteerInit = async () => {
-  const browser = await puppeteer.launch();
-  const page = await browser.newPage();
-  page.setDefaultTimeout(TIMEOUT);
-  return { browser, page };
-};
-
-const stringVoke = fn => "(" + fn.toString() + ")()";
 
 const goToNeverSSL = puppeteerPage => puppeteerPage.goto(NEVERSSL);
 
@@ -52,9 +23,10 @@ const injectGreaseMonkeyScript = page => {
 const automator = async () => {
   Status.INPROGESS = true;
   await spoof();
+  notifyer(`We're about to get started 🚗`);
   console.log("4. Spoofed: 💨");
 
-  await isNetworkConnected();
+  await isWifiConnectedAsync();
   console.log("5. Network Connected 📡");
 
   const { browser, page } = await puppeteerInit();
@@ -67,14 +39,19 @@ const automator = async () => {
     await browser.waitForTarget(
       target => target.url() === metadata.completedUrl
     );
-    console.log("7. Session Restored ✅");
-
-    console.log("🤖  👍");
   } catch (e) {
     console.error("🤢", e);
   } finally {
     await page.close();
     await browser.close();
+
+    if (await isInternetConnectedAsync()) {
+      console.log("7. Session Restored ✅");
+      console.log("🤖  👍");
+      notifyer(`All clear! ✅`);
+    } else {
+      notifyer(`We've hit a snag, might need your input ⛔️`);
+    }
   }
 
   Status.INPROGESS = false;
