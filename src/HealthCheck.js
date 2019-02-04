@@ -16,7 +16,7 @@ const HealthCheck = (function() {
         if (shouldEmitEvent) {
           Status.INPROGESS
             ? console.log("🤖 ⛏ Automator working....")
-            : console.log("2. Session Expired ❌");
+            : console.log("Session Expired ❌");
           emitter.emit(SESSION_EXPIRED);
         }
       }
@@ -25,7 +25,7 @@ const HealthCheck = (function() {
 
   return {
     init: async emitter => {
-      console.log("1. Health Check Initialize ✅  ❤️");
+      console.log("Health Check Initialize ✅  ❤️");
       const { sessionExpiredEventListner } =
         instance || createInstance(emitter);
 

@@ -3,6 +3,7 @@ import { metadata } from "../lib/greaseMonkeyScript";
 import request from "request";
 
 const GOOGLE = "https://google.com/";
+
 const SSIDMisMatchError = ssid =>
   new Error(
     `You are connected to the wrong network. Please ensure SSID matches the ${ssid}`

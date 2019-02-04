@@ -9,8 +9,9 @@ export const Status = {
 export default async () => {
   HealthCheck.init(appEventEmitter);
   appEventEmitter.on(SESSION_EXPIRED, async () => {
-    !Status.INPROGESS &&
-      (await automator()) &&
-      console.log("3. Engaging Automator 🤖");
+    if (!Status.INPROGESS) {
+      console.log("Engaging Automator 🤖");
+      await automator();
+    }
   });
 };

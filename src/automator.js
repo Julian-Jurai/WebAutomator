@@ -11,7 +11,7 @@ import greaseMonkeyScript, { metadata } from "./lib/greaseMonkeyScript";
 import { Status } from "./main";
 
 const NEVERSSL = "http://neverssl.com";
-
+const TIMEOUT = 90 * 1000;
 const goToNeverSSL = puppeteerPage => puppeteerPage.goto(NEVERSSL);
 
 const injectGreaseMonkeyScript = page => {
@@ -24,20 +24,21 @@ const automator = async () => {
   Status.INPROGESS = true;
   await spoof();
   notifyer(`We're about to get started 🚗`);
-  console.log("4. Spoofed: 💨");
+  console.log("Spoofed: 💨");
 
   await isWifiConnectedAsync();
-  console.log("5. Network Connected 📡");
+  console.log("Network Connected 📡");
 
   const { browser, page } = await puppeteerInit();
   injectGreaseMonkeyScript(page);
 
   try {
     await goToNeverSSL(page);
-    console.log("6. Start Navigation 🔭");
+    console.log("Start Navigation 🔭");
 
     await browser.waitForTarget(
-      target => target.url() === metadata.completedUrl
+      target => target.url() === metadata.completedUrl,
+      { timeout: TIMEOUT }
     );
   } catch (e) {
     console.error("🤢", e);
@@ -46,7 +47,7 @@ const automator = async () => {
     await browser.close();
 
     if (await isInternetConnectedAsync()) {
-      console.log("7. Session Restored ✅");
+      console.log("Session Restored ✅");
       console.log("🤖  👍");
       notifyer(`All clear! ✅`);
     } else {
