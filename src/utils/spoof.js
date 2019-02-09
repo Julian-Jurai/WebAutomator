@@ -6,6 +6,7 @@ export default () => {
     return new Promise((resolve, reject) => {
       exec(cmd, {}, (error, stdout, stderr) => {
         setTimeout(resolve, 2000);
+        console.error(error, stdout, stderr);
       });
     });
   }

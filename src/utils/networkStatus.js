@@ -11,7 +11,18 @@ const SSIDMisMatchError = ssid =>
 
 WiFiControl.init();
 
-export const isWifiConnected = (withLogging = false) => {
+export const resetNetworkInterface = () => {
+  console.log("Attempting to reset network interfaces");
+  WiFiControl.resetWiFi((err, response) => {
+    if (err) console.log(err);
+    console.log(response);
+  });
+};
+
+export const isWifiConnected = (
+  withLogging = false,
+  attemptToConnect = true
+) => {
   const message = WiFiControl.getIfaceState();
   const isConnected = message.connection === "connected";
   const isCorrectSSID = message.ssid === metadata.SSID;
@@ -26,11 +37,26 @@ export const isWifiConnected = (withLogging = false) => {
       throw SSIDMisMatchError(ssid);
     }
   } else {
+    attemptToConnect && attemptToConnectToWifi();
     success = false;
   }
 
   withLogging && console.log("Network connected:", success ? "✅" : "❌");
   return success;
+};
+
+const attemptToConnectToWifi = () => {
+  withLogging && console.log("Attempting to connect to wifi..");
+
+  const ap = {
+    ssid: metadata.SSID
+  };
+
+  WiFiControl.connectToAP(ap, (err, response) => {
+    if (err) console.log(err);
+    withLogging &&
+      console.error("Wifi connection attempt succesful ✅", response);
+  });
 };
 
 export const isWifiConnectedAsync = async () => {
