@@ -3,7 +3,8 @@ import appEventEmitter, { SESSION_EXPIRED } from "./emitter";
 import automator from "./automator";
 
 export const Status = {
-  INPROGESS: false
+  INPROGESS: false,
+  ATTEMPT_SOFT_RETRY: false
 };
 
 export default async () => {

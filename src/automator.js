@@ -22,9 +22,12 @@ const injectGreaseMonkeyScript = page => {
 
 const automator = async () => {
   Status.INPROGESS = true;
-  await spoof();
+
+  if (Status.ATTEMPT_SOFT_RETRY) {
+    console.log("Attempting Soft Retry 🌀");
+  } else await spoof();
+
   notifyer(`We're about to get started 🚗`);
-  console.log("Spoofed: 💨");
 
   await isWifiConnectedAsync();
   console.log("Network Connected 📡");
@@ -34,7 +37,7 @@ const automator = async () => {
 
   try {
     await goToNeverSSL(page);
-    console.log("Start Navigation 🔭");
+    console.log("Started Navigation 🔭");
 
     await browser.waitForTarget(
       target => target.url() === metadata.completedUrl,
@@ -50,8 +53,10 @@ const automator = async () => {
       console.log("Session Restored ✅");
       console.log("🤖  👍");
       notifyer(`All clear! ✅`);
+      Status.ATTEMPT_SOFT_RETRY = false;
     } else {
       notifyer(`We've hit a snag, might need your input ⛔️`);
+      Status.ATTEMPT_SOFT_RETRY = !Status.ATTEMPT_SOFT_RETRY;
     }
   }
 

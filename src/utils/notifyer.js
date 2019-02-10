@@ -10,6 +10,6 @@ export default msg =>
       wait: false
     },
     function(err, response) {
-      err && console.log("notifyer", { err }, { response });
+      err && console.log("notifyer error", { err }, { response });
     }
   );

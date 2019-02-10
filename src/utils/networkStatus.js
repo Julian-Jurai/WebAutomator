@@ -11,8 +11,10 @@ const SSIDMisMatchError = ssid =>
 
 WiFiControl.init();
 
+const withLogging = false;
+
 export const resetNetworkInterface = () => {
-  console.log("Attempting to reset network interfaces");
+  withLogging && console.log("Attempting to reset network interfaces");
   WiFiControl.resetWiFi((err, response) => {
     if (err) console.log(err);
     console.log(response);
@@ -55,7 +57,8 @@ const attemptToConnectToWifi = () => {
   WiFiControl.connectToAP(ap, (err, response) => {
     if (err) console.log(err);
     withLogging &&
-      console.error("Wifi connection attempt succesful ✅", response);
+      response &&
+      console.error("Wifi connection attempt succesful ✅");
   });
 };
 
@@ -84,7 +87,7 @@ export const isWifiConnectedAsync = async () => {
   }
 };
 
-export const isInternetConnectedAsync = (withLogging = false) =>
+export const isInternetConnectedAsync = () =>
   new Promise((resolve, reject) => {
     request(GOOGLE, (error, response, body) => {
       let success;
