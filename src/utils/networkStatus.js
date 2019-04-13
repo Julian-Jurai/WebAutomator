@@ -6,25 +6,22 @@ const GOOGLE = "https://google.com/";
 
 const SSIDMisMatchError = ssid =>
   new Error(
-    `You are connected to the wrong network. Please ensure SSID matches the ${ssid}`
+    `You are connected to the wrong network. Please ensure SSID matches the ${ssid} ❌`
   );
 
 WiFiControl.init();
 
-const withLogging = false;
+const withLogging = process.env.DEBUG_MODE;
 
 export const resetNetworkInterface = () => {
-  withLogging && console.log("Attempting to reset network interfaces");
+  withLogging && console.log("Attempting To Reset Network Interfaces...");
   WiFiControl.resetWiFi((err, response) => {
     if (err) console.log(err);
     console.log(response);
   });
 };
 
-export const isWifiConnected = (
-  withLogging = false,
-  attemptToConnect = true
-) => {
+export const isWifiConnected = (attemptToConnect = true) => {
   const message = WiFiControl.getIfaceState();
   const isConnected = message.connection === "connected";
   const isCorrectSSID = message.ssid === metadata.SSID;
@@ -43,22 +40,24 @@ export const isWifiConnected = (
     success = false;
   }
 
-  withLogging && console.log("Network connected:", success ? "✅" : "❌");
+  withLogging && console.log("Network Connected:", success ? "✅" : "❌");
   return success;
 };
 
 const attemptToConnectToWifi = () => {
-  withLogging && console.log("Attempting to connect to wifi..");
+  withLogging && console.log("Attempting to connect to wifi...");
 
   const ap = {
     ssid: metadata.SSID
   };
 
   WiFiControl.connectToAP(ap, (err, response) => {
-    if (err) console.log(err);
+    if (err) {
+      console.error("Wifi Connection Attempt Unsuccesful ❌", err);
+    }
     withLogging &&
       response &&
-      console.error("Wifi connection attempt succesful ✅");
+      console.error("Wifi Connection Attempt succesful ✅");
   });
 };
 
@@ -75,7 +74,7 @@ export const isWifiConnectedAsync = async () => {
         networkConnected = isWifiConnected();
 
         if (counter > timeout) {
-          throw Error(`Timeout error, network connection not established`);
+          throw Error("Timeout Error, Network Connection Not Established ❌");
         }
 
         if (networkConnected) {

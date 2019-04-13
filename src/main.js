@@ -11,7 +11,6 @@ export default async () => {
   HealthCheck.init(appEventEmitter);
   appEventEmitter.on(SESSION_EXPIRED, async () => {
     if (!Status.INPROGESS) {
-      console.log("Engaging Automator 🤖");
       await automator();
     }
   });

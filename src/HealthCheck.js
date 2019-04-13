@@ -11,12 +11,13 @@ const HealthCheck = (function() {
   let instance;
   const createInstance = emitter => ({
     sessionExpiredEventListner: async () => {
-      const shouldEmitEvent = !(await isInternetConnectedAsync());
+      let shouldEmitEvent = !(await isInternetConnectedAsync());
+
+      if (process.env.DEBUG_MODE && Status.INPROGESS) shouldEmitEvent = false; // Should not emit if in Debug Mode and ONE event has already been emitted
+
       if (isWifiConnected()) {
         if (shouldEmitEvent) {
-          Status.INPROGESS
-            ? console.log("🤖 ⛏ Automator working....")
-            : console.log("Session Expired ❌");
+          !Status.INPROGESS && console.log("Session Expired ❌");
           emitter.emit(SESSION_EXPIRED);
         }
       }
@@ -25,7 +26,7 @@ const HealthCheck = (function() {
 
   return {
     init: async emitter => {
-      console.log("Health Check Initialize ✅  ❤️");
+      console.log("Health Check Initialized ✅");
       const { sessionExpiredEventListner } =
         instance || createInstance(emitter);
 

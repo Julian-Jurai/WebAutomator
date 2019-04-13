@@ -1,11 +1,13 @@
 # Web Automotor
+
 _powered by [Puppetter](https://github.com/GoogleChrome/puppeteer)_
 
 ## What is it?
 
-It essentally operates like a userscript manager ([greasemonkey](https://en.wikipedia.org/wiki/Greasemonkey)) but on your local machine in a headless browser environment. For anonymity the the MAC is spoofed.  
+It essentally operates like a userscript manager ([greasemonkey](https://en.wikipedia.org/wiki/Greasemonkey)) but on your local machine in a headless browser environment. For anonymity the the MAC is spoofed.
 
 ## 🤖
+
 <img src="./Demo.gif">
 
 ## Getting Started
@@ -17,6 +19,10 @@ It essentally operates like a userscript manager ([greasemonkey](https://en.wiki
 5. Enter your script as you would in any userscript manager but without immediate invokcation and it must include an export metadata object with the following properties:
    - `SSID`
    - `completedUrl`: usedd as a trigger for stopping the automation script
+
+## Run in Debug Mode
+
+`npm start debug`
 
 Example:
 
