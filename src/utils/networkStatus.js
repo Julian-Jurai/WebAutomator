@@ -4,11 +4,6 @@ import request from "request";
 
 const GOOGLE = "https://google.com/";
 
-const SSIDMisMatchError = ssid =>
-  new Error(
-    `You are connected to the wrong network. Please ensure SSID matches the ${ssid} ❌`
-  );
-
 WiFiControl.init();
 
 const withLogging = process.env.DEBUG_MODE;
@@ -16,7 +11,7 @@ const withLogging = process.env.DEBUG_MODE;
 export const resetNetworkInterface = () => {
   withLogging && console.log("Attempting To Reset Network Interfaces...");
   WiFiControl.resetWiFi((err, response) => {
-    if (err) console.log(err);
+    if (err) console.error(err);
     console.log(response);
   });
 };
@@ -33,7 +28,11 @@ export const isWifiConnected = (attemptToConnect = true) => {
     if (isCorrectSSID) {
       success = true;
     } else {
-      throw SSIDMisMatchError(ssid);
+      console.error(
+        `You are connected to the wrong network.Please ensure SSID matches the ${
+          metadata.SSID
+        } ❌`
+      );
     }
   } else {
     attemptToConnect && attemptToConnectToWifi();
