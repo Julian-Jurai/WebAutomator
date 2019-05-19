@@ -1,4 +1,4 @@
-import { Notifications } from "./utils/notifyer";
+import { Notifications } from "./Notifications";
 import spoof from "./utils/spoof";
 import { Hooks } from "./index";
 import { initializeBrowser } from "./browser";
@@ -38,6 +38,7 @@ export default class Automator {
       visit
     } = await initializeBrowser();
 
+    // Inject Scripts before navigation
     injectScript(greaseMonkeyScript);
 
     // Setup hooks for CLI
