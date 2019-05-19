@@ -10,6 +10,7 @@ export const initializeBrowser = async () => {
     await browser.close();
     await page.close();
   };
+
   // Hook Into Headless Browser Console Message
   page.on("console", consoleObj => {
     const msg = consoleObj.text();

@@ -1,4 +1,4 @@
-import notifyer from "./utils/notifyer";
+import { Notifications } from "./utils/notifyer";
 import spoof from "./utils/spoof";
 import { Hooks } from "./index";
 import { initializeBrowser } from "./puppeteerSetup";
@@ -14,37 +14,9 @@ const TIMEOUT = 90 * 1000;
 const spoofStack = [];
 
 // Setup hooks for CLI
-Hooks.spoofStack = spoofStack;
-
-const Notifications = {
-  starting: () => {
-    notifyer(`We're about to get started 🚗`);
-    console.log("Engaging Automator 🤖");
-  },
-  navigatingToNeverSSL: () => {
-    console.log("Started Navigation To NeverSSL ✅");
-  },
-  softRetryAttempt: () => {
-    console.log("Attempting Soft Retry...");
-    console.log("Last spoofed:", spoofStack.pop());
-    console.log("Current time:", new Date());
-  },
-  networkConnected: () => {
-    console.log("Network Connected:✅");
-  },
-  internetConnected: () => {
-    notifyer(`All clear! ✅`);
-    console.log("Internet Connected:✅");
-  },
-  internetConnectionAttemptFailed: () => {
-    notifyer(`We've hit a snag, might need your input ⛔️`);
-  },
-  error: e => {
-    console.error("An Error Was Encountered Before Target Was Reached ❌", e);
-  }
-};
 
 const automator = async () => {
+  Hooks.spoofStack = spoofStack;
   Status.INPROGESS = true;
 
   if (spoofStack.length > 1) {
