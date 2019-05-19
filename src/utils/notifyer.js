@@ -19,6 +19,9 @@ export const Notifications = {
     notifyer(`We're about to get started 🚗`);
     console.log("Engaging Automator 🤖");
   },
+  healthCheckInitialized: () => {
+    console.log("Health Check Initialized ✅");
+  },
   navigatingToNeverSSL: () => {
     console.log("Started Navigation To NeverSSL ✅");
   },
