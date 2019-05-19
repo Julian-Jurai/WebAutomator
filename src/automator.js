@@ -1,8 +1,7 @@
-import { puppeteerInit } from "./puppeteerSetup";
-import spoof from "./utils/spoof";
-import stringVoke from "./utils/stringVoke";
 import notifyer from "./utils/notifyer";
-
+import spoof from "./utils/spoof";
+import { Hooks } from "./index";
+import { initializeBrowser } from "./puppeteerSetup";
 import {
   isWifiConnectedAsync,
   isInternetConnectedAsync
@@ -11,67 +10,89 @@ import greaseMonkeyScript, { metadata } from "./lib/greaseMonkeyScript";
 import { Status } from "./main";
 
 const NEVERSSL = "http://neverssl.com";
-const TIMEOUT = process.env.DEBUG_MODE ? 1000 * 1000 : 90 * 1000;
+const TIMEOUT = 90 * 1000;
+const spoofStack = [];
 
-const goToNeverSSL = puppeteerPage => puppeteerPage.goto(NEVERSSL);
+// Setup hooks for CLI
+Hooks.spoofStack = spoofStack;
 
-const injectGreaseMonkeyScript = page => {
-  page.on("domcontentloaded", () =>
-    page.addScriptTag({
-      content: stringVoke(greaseMonkeyScript, {
-        runInDebugMode: process.env.DEBUG_MODE
-      })
-    })
-  );
+const Notifications = {
+  starting: () => {
+    notifyer(`We're about to get started 🚗`);
+    console.log("Engaging Automator 🤖");
+  },
+  navigatingToNeverSSL: () => {
+    console.log("Started Navigation To NeverSSL ✅");
+  },
+  softRetryAttempt: () => {
+    console.log("Attempting Soft Retry...");
+    console.log("Last spoofed:", spoofStack.pop());
+    console.log("Current time:", new Date());
+  },
+  networkConnected: () => {
+    console.log("Network Connected:✅");
+  },
+  internetConnected: () => {
+    notifyer(`All clear! ✅`);
+    console.log("Internet Connected:✅");
+  },
+  internetConnectionAttemptFailed: () => {
+    notifyer(`We've hit a snag, might need your input ⛔️`);
+  },
+  error: e => {
+    console.error("An Error Was Encountered Before Target Was Reached ❌", e);
+  }
 };
-
-export const spoofStack = [];
 
 const automator = async () => {
   Status.INPROGESS = true;
 
-  notifyer(`We're about to get started 🚗`);
-  console.log("Engaging Automator 🤖");
-
   if (spoofStack.length > 1) {
-    console.log("Attempting Soft Retry...");
-    console.log("Last spoofed:", spoofStack.pop());
-    console.log("Current time:", new Date());
+    Notifications.softRetryAttempt();
   } else {
     await spoof();
     spoofStack.push(new Date());
   }
 
   await isWifiConnectedAsync();
-  console.log("Network Connected:✅");
+  Notifications.networkConnected();
 
-  const { browser, page } = await puppeteerInit();
+  const {
+    browser,
+    page,
+    injectScript,
+    closeBrowser
+  } = await initializeBrowser();
 
-  injectGreaseMonkeyScript(page);
+  // Setup hooks for CLI
+  Hooks.closeBrowser = closeBrowser;
+
+  injectScript(greaseMonkeyScript);
 
   try {
-    await goToNeverSSL(page);
-    console.log("Started Navigation To NeverSSL ✅");
+    await page.goto(NEVERSSL);
+    Notifications.navigatingToNeverSSL();
 
-    if (process.env.DEBUG_MODE) return; // Early return to avoid timeout error
+    // Early return to avoid timeout error
+    if (process.env.DEBUG_MODE) return;
 
     await browser.waitForTarget(
       target => target.url() === metadata.completedUrl,
       { timeout: TIMEOUT }
     );
   } catch (e) {
-    console.error("An Error Was Encountered Before Target Was Reached ❌", e);
+    Notifications.error(e);
   } finally {
-    if (process.env.DEBUG_MODE) return; // Keep browser open
+    // Keep browser open when debugging
+    if (process.env.DEBUG_MODE) return;
 
-    await page.close();
-    await browser.close();
+    await closeBrowser();
+
     if (await isInternetConnectedAsync()) {
-      notifyer(`All clear! ✅`);
-      console.log("Internet Connected:✅");
+      Notifications.internetConnected(e);
       spoofStack.pop();
     } else {
-      notifyer(`We've hit a snag, might need your input ⛔️`);
+      Notifications.internetConnectionAttemptFailed(e);
     }
   }
 

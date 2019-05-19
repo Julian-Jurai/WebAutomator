@@ -3,6 +3,8 @@ import prompt from "password-prompt";
 import main from "./main";
 import { spoofStack } from "./automator";
 
+export const Hooks = {};
+
 const listenToStdin = () => {
   var stdin = process.openStdin();
   stdin.addListener("data", function(d) {
@@ -15,6 +17,7 @@ const listenToStdin = () => {
       spoofStack.push(new Date());
       console.log("Next attempt will be a soft retry ✅");
     } else if (Boolean(input.match(/(reset)|(rs)/))) {
+      Hooks.closeBrowser && Hooks.closeBrowser();
       while (spoofStack.length > 1) {
         spoofStack.pop();
       }
