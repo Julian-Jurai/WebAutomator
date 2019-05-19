@@ -1,16 +1,19 @@
 import HealthCheck from "./HealthCheck";
 import appEventEmitter, { SESSION_EXPIRED } from "./emitter";
-import automator from "./automator";
+import Automator from "./automator";
 
 export const Status = {
   INPROGESS: false
 };
 
+const automator = new Automator();
+
 export default async () => {
   HealthCheck.init(appEventEmitter);
   appEventEmitter.on(SESSION_EXPIRED, async () => {
-    if (!Status.INPROGESS) {
-      await automator();
+    if (!automator.inProgress) {
+      Status.INPROGESS = true;
+      await automator.start();
     }
   });
 };

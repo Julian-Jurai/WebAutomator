@@ -7,63 +7,122 @@ import {
   isInternetConnectedAsync
 } from "./utils/networkStatus";
 import greaseMonkeyScript, { metadata } from "./lib/greaseMonkeyScript";
-import { Status } from "./main";
 
 const NEVERSSL = "http://neverssl.com";
-const spoofStack = [];
 
-const automator = async () => {
-  // Setup hooks for CLI
-  Status.INPROGESS = true;
+export default class Automator {
+  constructor() {
+    this.inProgress = false;
+    this.spoofStack = [];
 
-  if (spoofStack.length > 1) {
-    Notifications.softRetryAttempt();
-  } else {
-    await spoof();
-    spoofStack.push(new Date());
+    this.start = this.start.bind(this);
   }
 
-  await isWifiConnectedAsync();
-  Notifications.networkConnected();
+  async start() {
+    this.inProgress = true;
 
-  const {
-    injectScript,
-    closeBrowser,
-    waitUntil,
-    visit
-  } = await initializeBrowser();
-
-  injectScript(greaseMonkeyScript);
-
-  // Setup hooks for CLI
-  Hooks.closeBrowser = closeBrowser;
-  Hooks.spoofStack = spoofStack;
-
-  try {
-    await visit(NEVERSSL);
-    Notifications.navigatingToNeverSSL();
-
-    // Early return to avoid timeout error
-    if (process.env.DEBUG_MODE) return;
-
-    await waitUntil(metadata.completedUrl);
-  } catch (e) {
-    Notifications.error(e);
-  } finally {
-    // Keep browser open when debugging
-    if (process.env.DEBUG_MODE) return;
-
-    await closeBrowser();
-
-    if (await isInternetConnectedAsync()) {
-      Notifications.internetConnected(e);
-      spoofStack.pop();
+    if (this.spoofStack.length > 1) {
+      Notifications.softRetryAttempt();
     } else {
-      Notifications.internetConnectionAttemptFailed(e);
+      await spoof();
+      this.spoofStack.push(new Date());
+    }
+
+    await isWifiConnectedAsync();
+    Notifications.networkConnected();
+
+    const {
+      injectScript,
+      closeBrowser,
+      waitUntil,
+      visit
+    } = await initializeBrowser();
+
+    injectScript(greaseMonkeyScript);
+
+    // Setup hooks for CLI
+    Hooks.closeBrowser = closeBrowser;
+    Hooks.spoofStack = this.spoofStack;
+
+    try {
+      await visit(NEVERSSL);
+      Notifications.navigatingToNeverSSL();
+
+      // Early return to avoid timeout error
+      if (process.env.DEBUG_MODE) return;
+
+      await waitUntil(metadata.completedUrl);
+    } catch (e) {
+      Notifications.error(e);
+    } finally {
+      // Keep browser open when debugging
+      if (process.env.DEBUG_MODE) return;
+
+      await closeBrowser();
+
+      if (await isInternetConnectedAsync()) {
+        Notifications.internetConnected(e);
+        this.spoofStack.pop();
+      } else {
+        Notifications.internetConnectionAttemptFailed(e);
+      }
+      this.inProgress = false;
     }
   }
+}
 
-  Status.INPROGESS = false;
-};
+// const automator = async () => {
+//   // Setup hooks for CLI
+//   Status.INPROGESS = true;
 
-export default automator;
+//   if (this.spoofStack.length > 1) {
+//     Notifications.softRetryAttempt();
+//   } else {
+//     await spoof();
+//     this.spoofStack.push(new Date());
+//   }
+
+//   await isWifiConnectedAsync();
+//   Notifications.networkConnected();
+
+//   const {
+//     injectScript,
+//     closeBrowser,
+//     waitUntil,
+//     visit
+//   } = await initializeBrowser();
+
+//   injectScript(greaseMonkeyScript);
+
+//   // Setup hooks for CLI
+//   Hooks.closeBrowser = closeBrowser;
+//   Hooks.this.spoofStack = this.spoofStack;
+
+//   try {
+//     await visit(NEVERSSL);
+//     Notifications.navigatingToNeverSSL();
+
+//     // Early return to avoid timeout error
+//     if (process.env.DEBUG_MODE) return;
+
+//     await waitUntil(metadata.completedUrl);
+//   } catch (e) {
+//     Notifications.error(e);
+//   } finally {
+//     // Keep browser open when debugging
+//     if (process.env.DEBUG_MODE) return;
+
+//     await closeBrowser();
+
+//     if (await isInternetConnectedAsync()) {
+//       Notifications.internetConnected(e);
+//       this.spoofStack.pop();
+//     } else {
+//       Notifications.internetConnectionAttemptFailed(e);
+//     }
+//   }
+
+//   Status.INPROGESS = false;
+// };
+
+// export default automator;
