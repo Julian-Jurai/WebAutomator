@@ -1,6 +1,7 @@
 import "babel-polyfill";
 import prompt from "password-prompt";
-import main, { Status } from "./main";
+import main from "./main";
+import { spoofStack } from "./automator";
 
 const listenToStdin = () => {
   var stdin = process.openStdin();
@@ -10,10 +11,16 @@ const listenToStdin = () => {
     // with toString() and then trim()
 
     const input = d.toString().trim();
-
     if (Boolean(input.match(/(soft)|(sf)/))) {
-      Status.ATTEMPT_SOFT_RETRY = true;
+      spoofStack.push(new Date());
       console.log("Next attempt will be a soft retry ✅");
+    } else if (Boolean(input.match(/(reset)|(rs)/))) {
+      while (spoofStack.length > 1) {
+        spoofStack.pop();
+      }
+      console.log("Next attempt will be a spoofed ✅");
+    } else if (Boolean(input.match(/(print spoof stack)|(prs)/))) {
+      console.log("spoofStack", spoofStack);
     } else {
       console.log("You Typed:", input);
     }

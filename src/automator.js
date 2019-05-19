@@ -25,15 +25,22 @@ const injectGreaseMonkeyScript = page => {
   );
 };
 
+export const spoofStack = [];
+
 const automator = async () => {
   Status.INPROGESS = true;
 
   notifyer(`We're about to get started 🚗`);
   console.log("Engaging Automator 🤖");
 
-  if (Status.ATTEMPT_SOFT_RETRY) {
+  if (spoofStack.length > 1) {
     console.log("Attempting Soft Retry...");
-  } else await spoof();
+    console.log("Last spoofed:", spoofStack.pop());
+    console.log("Current time:", new Date());
+  } else {
+    await spoof();
+    spoofStack.push(new Date());
+  }
 
   await isWifiConnectedAsync();
   console.log("Network Connected:✅");
@@ -62,9 +69,9 @@ const automator = async () => {
     if (await isInternetConnectedAsync()) {
       notifyer(`All clear! ✅`);
       console.log("Internet Connected:✅");
+      spoofStack.pop();
     } else {
       notifyer(`We've hit a snag, might need your input ⛔️`);
-      Status.ATTEMPT_SOFT_RETRY = !Status.ATTEMPT_SOFT_RETRY;
     }
   }
 
