@@ -27,6 +27,15 @@ export const Notifications = {
     console.log("Last spoofed:", spoofStack.pop());
     console.log("Current time:", new Date());
   },
+  softRetryOnNextAttempt: () => {
+    console.log("Next attempt will be a soft retry ✅");
+  },
+  spoofOnNextAttempt: () => {
+    console.log("Next attempt will be a soft retry ✅");
+  },
+  spoofStack: spoofStack => {
+    console.log("spoofStack", spoofStack);
+  },
   networkConnected: () => {
     console.log("Network Connected:✅");
   },

@@ -1,7 +1,7 @@
 import { Notifications } from "./utils/notifyer";
 import spoof from "./utils/spoof";
 import { Hooks } from "./index";
-import { initializeBrowser } from "./puppeteerSetup";
+import { initializeBrowser } from "./browser";
 import {
   isWifiConnectedAsync,
   isInternetConnectedAsync
@@ -10,13 +10,10 @@ import greaseMonkeyScript, { metadata } from "./lib/greaseMonkeyScript";
 import { Status } from "./main";
 
 const NEVERSSL = "http://neverssl.com";
-const TIMEOUT = 90 * 1000;
 const spoofStack = [];
 
-// Setup hooks for CLI
-
 const automator = async () => {
-  Hooks.spoofStack = spoofStack;
+  // Setup hooks for CLI
   Status.INPROGESS = true;
 
   if (spoofStack.length > 1) {
@@ -30,28 +27,26 @@ const automator = async () => {
   Notifications.networkConnected();
 
   const {
-    browser,
-    page,
     injectScript,
-    closeBrowser
+    closeBrowser,
+    waitUntil,
+    visit
   } = await initializeBrowser();
-
-  // Setup hooks for CLI
-  Hooks.closeBrowser = closeBrowser;
 
   injectScript(greaseMonkeyScript);
 
+  // Setup hooks for CLI
+  Hooks.closeBrowser = closeBrowser;
+  Hooks.spoofStack = spoofStack;
+
   try {
-    await page.goto(NEVERSSL);
+    await visit(NEVERSSL);
     Notifications.navigatingToNeverSSL();
 
     // Early return to avoid timeout error
     if (process.env.DEBUG_MODE) return;
 
-    await browser.waitForTarget(
-      target => target.url() === metadata.completedUrl,
-      { timeout: TIMEOUT }
-    );
+    await waitUntil(metadata.completedUrl);
   } catch (e) {
     Notifications.error(e);
   } finally {

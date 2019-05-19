@@ -28,6 +28,14 @@ export const initializeBrowser = async () => {
     );
   };
 
+  const visit = url => page.goto(url);
+
+  const waitUntil = async url =>
+    await browser.waitForTarget(target => target.url() === url, {
+      timeout: TIMEOUT
+    });
+
   page.setDefaultTimeout(TIMEOUT);
-  return { browser, page, closeBrowser, injectScript };
+
+  return { browser, page, visit, closeBrowser, injectScript, waitUntil };
 };
