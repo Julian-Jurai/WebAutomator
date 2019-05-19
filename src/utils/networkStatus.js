@@ -1,20 +1,18 @@
 import WiFiControl from "wifi-control";
+import { Notifications } from "../Notifications";
 import { metadata } from "../lib/greaseMonkeyScript";
 import ping from "net-ping";
-
-const session = ping.createSession();
 
 const GOOGLE_DNS = "8.8.8.8";
 
 WiFiControl.init();
 
-const withLogging = process.env.DEBUG_MODE;
+const debugModeEnabled = process.env.DEBUG_MODE;
 
 export const resetNetworkInterface = () => {
-  withLogging && console.log("Attempting To Reset Network Interfaces...");
-  WiFiControl.resetWiFi((err, response) => {
-    if (err) console.error(err);
-    console.log(response);
+  debugModeEnabled && console.log("Attempting To Reset Network Interfaces...");
+  WiFiControl.resetWiFi((error, response) => {
+    if (error) Notifications.resetNetworkInterfaceError(error, response);
   });
 };
 
@@ -30,33 +28,29 @@ export const isWifiConnected = (attemptToConnect = true) => {
     if (isCorrectSSID) {
       success = true;
     } else {
-      console.error(
-        `You are connected to the wrong network.Please ensure SSID matches the ${
-          metadata.SSID
-        } ❌`
-      );
+      Notifications.incorrectSSIDConnection(metadata.SSID);
     }
   } else {
     attemptToConnect && attemptToConnectToWifi();
     success = false;
   }
 
-  withLogging && console.log("Network Connected:", success ? "✅" : "❌");
+  debugModeEnabled && console.log("Network Connected:", success ? "✅" : "❌");
   return success;
 };
 
 const attemptToConnectToWifi = () => {
-  withLogging && console.log("Attempting to connect to wifi...");
+  debugModeEnabled && console.log("Attempting to connect to wifi...");
 
   const ap = {
     ssid: metadata.SSID
   };
 
-  WiFiControl.connectToAP(ap, (err, response) => {
-    if (err) {
-      console.error("Wifi Connection Attempt Unsuccesful ❌", err);
+  WiFiControl.connectToAP(ap, (error, response) => {
+    if (error) {
+      Notifications.wifiiConnectAttemptFailed(error);
     }
-    withLogging &&
+    debugModeEnabled &&
       response &&
       console.error("Wifi Connection Attempt succesful ✅");
   });
@@ -64,7 +58,8 @@ const attemptToConnectToWifi = () => {
 
 export const isWifiConnectedAsync = async () => {
   let networkConnected = isWifiConnected();
-  let timeout = 20 * 1000;
+  let intervalTime = 20 * 1000;
+  let limit = 5;
   let counter = 0;
   let interval;
 
@@ -74,7 +69,7 @@ export const isWifiConnectedAsync = async () => {
         counter += 1;
         networkConnected = isWifiConnected();
 
-        if (counter > timeout) {
+        if (counter > limit) {
           throw Error("Timeout Error, Network Connection Not Established ❌");
         }
 
@@ -82,18 +77,23 @@ export const isWifiConnectedAsync = async () => {
           clearInterval(interval);
           resolve();
         }
-      }, 2000);
+      }, intervalTime);
     });
   }
 };
 
-export const isInternetConnected = () =>
-  new Promise((resolve, reject) => {
+const session = ping.createSession();
+
+export const isInternetConnected = () => {
+  return new Promise((resolve, reject) => {
     session.pingHost(GOOGLE_DNS, (error, target) => {
+      let success = true;
       if (error) {
-        withLogging && console.log(target + ": " + error.toString());
-        console.log("Internet connected: ❌");
-      } else console.log("Internet connected: ✅");
+        debugModeEnabled && console.log(target + ": " + error.toString());
+        success = false;
+      }
+      internetConnectionStatus(success);
       resolve();
     });
   });
+};
