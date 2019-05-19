@@ -1,8 +1,10 @@
 import WiFiControl from "wifi-control";
 import { metadata } from "../lib/greaseMonkeyScript";
-import request from "request";
+import ping from "net-ping";
 
-const GOOGLE = "https://google.com/";
+const session = ping.createSession();
+
+const GOOGLE_DNS = "8.8.8.8";
 
 WiFiControl.init();
 
@@ -85,20 +87,13 @@ export const isWifiConnectedAsync = async () => {
   }
 };
 
-export const isInternetConnectedAsync = () =>
+export const isInternetConnected = () =>
   new Promise((resolve, reject) => {
-    request(GOOGLE, (error, response, body) => {
-      let success;
+    session.pingHost(GOOGLE_DNS, (error, target) => {
       if (error) {
-        success = false;
-      }
-
-      if (response) {
-        success = response.statusCode == 200;
-      }
-
-      withLogging && console.log("Internet connected:", success ? "✅" : "❌");
-
-      resolve(success);
+        withLogging && console.log(target + ": " + error.toString());
+        console.log("Internet connected: ❌");
+      } else console.log("Internet connected: ✅");
+      resolve();
     });
   });
