@@ -1,7 +1,7 @@
 import { SESSION_EXPIRED } from "./emitter";
 import { Status } from "./main";
-import { isWifiConnected, isInternetConnected } from "./utils/networkStatus";
-import { Notifications } from "./Notifications";
+import { isWifiConnected, isInternetConnected } from "./utils/ConnectionStatus";
+import Notifications from "./Notifications";
 
 const POLLING_INTERVAL = 3000;
 

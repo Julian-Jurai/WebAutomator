@@ -1,24 +1,22 @@
-import { Notifications } from "./Notifications";
+import Notifications from "./Notifications";
 import spoof from "./utils/spoof";
 import { Hooks } from "./index";
 import { initializeBrowser } from "./browser";
-import {
-  isWifiConnectedAsync,
-  isInternetConnected
-} from "./utils/networkStatus";
 import greaseMonkeyScript, { metadata } from "./lib/greaseMonkeyScript";
 
 const NEVERSSL = "http://neverssl.com";
 
 export default class Automator {
-  constructor() {
+  constructor({ ensureWifiConnection, isInternetConnected }) {
     this.inProgress = false;
     this.spoofStack = [];
+    this.ensureWifiConnection = ensureWifiConnection;
+    this.isInternetConnected = isInternetConnected;
 
     this.start = this.start.bind(this);
   }
-
   async start() {
+    // Return if a session is already in progress
     if (this.inProgress) return;
 
     this.inProgress = true;
@@ -30,7 +28,8 @@ export default class Automator {
       this.spoofStack.push(new Date());
     }
 
-    await isWifiConnectedAsync();
+    await this.ensureWifiConnection();
+
     Notifications.networkConnected();
 
     const {
@@ -63,7 +62,7 @@ export default class Automator {
 
       await closeBrowser();
 
-      if (await isInternetConnected()) {
+      if (await this.isInternetConnected()) {
         Notifications.internetConnected(e);
         this.spoofStack.pop();
       } else {

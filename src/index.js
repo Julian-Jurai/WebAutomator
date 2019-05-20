@@ -1,8 +1,8 @@
 import "babel-polyfill";
 import prompt from "password-prompt";
 import main from "./main";
-import { spoofStack } from "./automator";
-import { Notifications } from "./Notifications";
+import { spoofStack } from "./Automator";
+import Notifications from "./Notifications";
 
 export const Hooks = {};
 

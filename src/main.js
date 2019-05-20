@@ -1,18 +1,16 @@
-import HealthCheck from "./HealthCheck";
-import appEventEmitter, { SESSION_EXPIRED } from "./emitter";
-import Automator from "./automator";
+import Automator from "./Automator";
+import ConnectionStatus from "./utils/ConnectionStatus";
+import { metadata } from "./lib/greaseMonkeyScript";
 
-export const Status = {
-  INPROGESS: false
-};
+const {
+  attemptToConnectToWifi,
+  isInternetConnected,
+  listen
+} = new ConnectionStatus(metadata);
 
-const automator = new Automator();
+const { start: onDisconnect } = new Automator({
+  ensureWifiConnection: attemptToConnectToWifi,
+  isInternetConnected
+});
 
-export default async () => {
-  HealthCheck.init(appEventEmitter);
-  appEventEmitter.on(SESSION_EXPIRED, async () => {
-    if (!automator.inProgress) {
-      await automator.start();
-    }
-  });
-};
+listen(onDisconnect);
