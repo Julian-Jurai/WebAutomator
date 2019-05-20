@@ -15,7 +15,7 @@ const notifyer = msg =>
     }
   );
 
-export const Notifications = {
+const Notifications = {
   starting: () => {
     notifyer(`We're about to get started 🚗`);
     console.log("Engaging Automator 🤖");
@@ -74,4 +74,4 @@ export const Notifications = {
   }
 };
 
-export default notifyer;
+export default Notifications;
