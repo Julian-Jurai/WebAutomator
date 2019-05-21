@@ -19,6 +19,8 @@ export default class Automator {
   }
 
   async start() {
+    if (this.inProgress) return;
+
     this.inProgress = true;
 
     if (this.spoofStack.length > 1) {
@@ -61,10 +63,10 @@ export default class Automator {
       await closeBrowser();
 
       if (await isInternetConnectedAsync()) {
-        Notifications.internetConnected(e);
+        Notifications.internetConnected();
         this.spoofStack.pop();
       } else {
-        Notifications.internetConnectionAttemptFailed(e);
+        Notifications.internetConnectionAttemptFailed();
       }
       this.inProgress = false;
     }

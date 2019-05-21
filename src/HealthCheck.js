@@ -17,7 +17,7 @@ const HealthCheck = (function() {
 
       if (isWifiConnected()) {
         if (shouldEmitEvent) {
-          !Status.INPROGESS && console.log("Session Expired ❌");
+          // !Status.INPROGESS && console.log("Session Expired ❌");
           emitter.emit(SESSION_EXPIRED);
         }
       }

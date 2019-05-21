@@ -12,7 +12,6 @@ export default async () => {
   HealthCheck.init(appEventEmitter);
   appEventEmitter.on(SESSION_EXPIRED, async () => {
     if (!automator.inProgress) {
-      Status.INPROGESS = true;
       await automator.start();
     }
   });

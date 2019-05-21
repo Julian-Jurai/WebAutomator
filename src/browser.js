@@ -7,8 +7,8 @@ export const initializeBrowser = async () => {
   const browser = await puppeteer.launch({ headless: !process.env.DEBUG_MODE });
   const page = await browser.newPage();
   const closeBrowser = async () => {
-    await browser.close();
     await page.close();
+    await browser.close();
   };
 
   // Hook Into Headless Browser Console Message
