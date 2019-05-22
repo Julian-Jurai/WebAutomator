@@ -71,6 +71,7 @@ const Notifications = {
       "An Error Was Encountered Before Target Was Reached ❌",
       error
     );
+    console.trace(error.stack || error);
   }
 };
 

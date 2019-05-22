@@ -1,6 +1,6 @@
 import WiFiControl from "wifi-control";
 import ping from "net-ping";
-import Notifications from "../Notifications";
+import Notifications from "./Notifications";
 
 const GOOGLE_DNS = "8.8.8.8";
 
@@ -18,18 +18,19 @@ class ConnectionStatus {
     this.session = ping.createSession();
 
     this.close = this.close.bind(this);
+    this.listener = this.listener.bind(this);
     this.isInternetConnected = this.isInternetConnected.bind(this);
     this.isWifiConnected = this.isWifiConnected.bind(this);
-    this.attemptToConnectToAccessPoint = this.attemptToConnectToAccessPoint.bind();
-    this.attemptToConnectToWifi = this.attemptToConnectToWifi.bind();
+    this.attemptToConnectToAccessPoint = this.attemptToConnectToAccessPoint.bind(
+      this
+    );
+    this.attemptToConnectToWifi = this.attemptToConnectToWifi.bind(this);
   }
 
-  listen(onDisconnect) {
+  listener({ onDisconnect }) {
     setInterval(async () => {
       if (this.isWifiConnected()) {
-        if (await this.isInternetConnected()) {
-          Notifications.networkConnected();
-        } else {
+        if (!(await this.isInternetConnected())) {
           await onDisconnect();
         }
       } else {
@@ -51,7 +52,7 @@ class ConnectionStatus {
   }
 
   async attemptToConnectToWifi() {
-    let networkConnected = isWifiConnected();
+    let networkConnected = this.isWifiConnected();
     let intervalTime = 20 * 1000;
     let limit = 5;
     let counter = 0;
@@ -61,7 +62,7 @@ class ConnectionStatus {
       await new Promise((resolve, reject) => {
         interval = setInterval(() => {
           counter += 1;
-          networkConnected = isWifiConnected();
+          networkConnected = this.isWifiConnected();
 
           if (counter > limit) {
             throw Error("Timeout Error, Network Connection Not Established ❌");
@@ -77,7 +78,7 @@ class ConnectionStatus {
   }
 
   attemptToConnectToAccessPoint() {
-    debugModeEnabled && console.log("Attempting to connect to wifi...");
+    this.debugModeEnabled && console.log("Attempting to connect to wifi...");
 
     const ap = {
       ssid: this.ssid
@@ -87,7 +88,7 @@ class ConnectionStatus {
       if (error) {
         Notifications.wifiiConnectAttemptFailed(error);
       }
-      debugModeEnabled &&
+      this.debugModeEnabled &&
         response &&
         console.error("Wifi Connection Attempt succesful ✅");
     });
@@ -112,21 +113,22 @@ class ConnectionStatus {
       success = false;
     }
 
-    debugModeEnabled &&
+    this.debugModeEnabled &&
       console.log("Network Connected:", success ? "✅" : "❌");
     return success;
   }
 
-  isInternetConnected() {
+  async isInternetConnected() {
     return new Promise((resolve, reject) => {
-      session.pingHost(GOOGLE_DNS, (error, target) => {
+      this.session.pingHost(GOOGLE_DNS, (error, target) => {
         let success = true;
         if (error) {
-          debugModeEnabled && console.log(target + ": " + error.toString());
+          this.debugModeEnabled &&
+            console.log(target + ": " + error.toString());
           success = false;
         }
-        internetConnectionStatus(success);
-        resolve();
+        Notifications.internetConnectionStatus(success);
+        resolve(success);
       });
     });
   }

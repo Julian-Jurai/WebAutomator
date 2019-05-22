@@ -1,16 +1,16 @@
 import Notifications from "./Notifications";
 import spoof from "./utils/spoof";
-import { Hooks } from "./index";
 import { initializeBrowser } from "./browser";
 import greaseMonkeyScript, { metadata } from "./lib/greaseMonkeyScript";
 
 const NEVERSSL = "http://neverssl.com";
 
 export default class Automator {
-  constructor({ ensureWifiConnection, isInternetConnected }) {
+  constructor({ ensureWifiConnection, isInternetConnected, cliHooks }) {
     this.inProgress = false;
     this.spoofStack = [];
     this.ensureWifiConnection = ensureWifiConnection;
+    this.cliHooks = cliHooks;
     this.isInternetConnected = isInternetConnected;
 
     this.start = this.start.bind(this);
@@ -28,9 +28,12 @@ export default class Automator {
       this.spoofStack.push(new Date());
     }
 
-    await this.ensureWifiConnection();
-
-    Notifications.networkConnected();
+    try {
+      await this.ensureWifiConnection();
+      Notifications.networkConnected();
+    } catch (error) {
+      Notifications.wifiiConnectAttemptFailed(error);
+    }
 
     const {
       injectScript,
@@ -43,8 +46,8 @@ export default class Automator {
     injectScript(greaseMonkeyScript);
 
     // Setup hooks for CLI
-    Hooks.closeBrowser = closeBrowser;
-    Hooks.spoofStack = this.spoofStack;
+    this.cliHooks.closeBrowser = closeBrowser;
+    this.cliHooks.spoofStack = this.spoofStack;
 
     try {
       await visit(NEVERSSL);
@@ -63,7 +66,7 @@ export default class Automator {
       await closeBrowser();
 
       if (await this.isInternetConnected()) {
-        Notifications.internetConnected(e);
+        Notifications.internetConnected();
         this.spoofStack.pop();
       } else {
         Notifications.internetConnectionAttemptFailed();
