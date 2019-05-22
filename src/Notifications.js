@@ -58,7 +58,7 @@ const Notifications = {
   },
   internetConnected: () => {
     notifyer(`All clear! ✅`);
-    console.log("Internet Connected:✅");
+    console.log("Internet Connected: ✅");
   },
   internetConnectionStatus: success => {
     console.log("Internet connected:", success ? "✅" : "❌");

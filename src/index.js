@@ -2,7 +2,7 @@ import "babel-polyfill";
 import prompt from "password-prompt";
 import ConnectionStatus from "./ConnectionStatus";
 import Notifications from "./Notifications";
-import { metadata } from "./lib/greaseMonkeyScript";
+import greaseMonkeyScript from "./lib/greaseMonkeyScript";
 import Automator from "./Automator";
 
 export const Hooks = {};
@@ -12,11 +12,12 @@ const listenForDisconnect = () => {
     attemptToConnectToWifi,
     isInternetConnected,
     listener
-  } = new ConnectionStatus(metadata);
+  } = new ConnectionStatus(greaseMonkeyScript.metadata);
 
   const automatorConfig = {
     ensureWifiConnection: attemptToConnectToWifi,
     isInternetConnected,
+    greaseMonkeyScript,
     cliHooks: Hooks
   };
 
