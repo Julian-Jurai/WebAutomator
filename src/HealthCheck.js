@@ -1,9 +1,7 @@
 import { SESSION_EXPIRED } from "./emitter";
 import { Status } from "./main";
-import {
-  isWifiConnected,
-  isInternetConnectedAsync
-} from "./utils/networkStatus";
+import { isWifiConnected, isInternetConnected } from "./utils/ConnectionStatus";
+import Notifications from "./Notifications";
 
 const POLLING_INTERVAL = 3000;
 
@@ -11,7 +9,7 @@ const HealthCheck = (function() {
   let instance;
   const createInstance = emitter => ({
     sessionExpiredEventListner: async () => {
-      let shouldEmitEvent = !(await isInternetConnectedAsync());
+      let shouldEmitEvent = !(await isInternetConnected());
 
       if (process.env.DEBUG_MODE && Status.INPROGESS) shouldEmitEvent = false; // Should not emit if in Debug Mode and ONE event has already been emitted
 
@@ -26,7 +24,8 @@ const HealthCheck = (function() {
 
   return {
     init: async emitter => {
-      console.log("Health Check Initialized ✅");
+      Notifications.healthCheckInitialized();
+
       const { sessionExpiredEventListner } =
         instance || createInstance(emitter);
 
