@@ -34,16 +34,19 @@ const listenToStdin = () => {
     // with toString() and then trim()
 
     const input = d.toString().trim();
-    if (Boolean(input.match(/(soft)|(sf)/))) {
+    if (Boolean(input.match(/(soft)|(^sf$)/))) {
+      while (Hooks.spoofStack.length > 0) {
+        Hooks.spoofStack.pop();
+      }
       Hooks.spoofStack.push(new Date());
       Notifications.softRetryOnNextAttempt();
-    } else if (Boolean(input.match(/(reset)|(rs)/))) {
+    } else if (Boolean(input.match(/(^reset$)|(^rs$)/))) {
       Hooks.closeBrowser && Hooks.closeBrowser();
-      while (Hooks.spoofStack.length > 1) {
+      while (Hooks.spoofStack.length > 0) {
         Hooks.spoofStack.pop();
       }
       Notifications.spoofOnNextAttempt();
-    } else if (Boolean(input.match(/(print spoof stack)|(prs)/))) {
+    } else if (Boolean(input.match(/(print spoof stack)|(^prs$)/))) {
       Notifications.spoofStack(Hooks.spoofStack);
     } else {
       console.log("You Typed:", input);
@@ -57,6 +60,6 @@ const listenToStdin = () => {
 
   process.env.PASSWORD = await prompt("password: ", { method: "hide" });
   process.env.DEBUG_MODE = process.argv[2] === "debug" ? true : "";
-  listenToStdin();
   listenForDisconnect();
+  listenToStdin();
 })();

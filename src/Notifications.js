@@ -48,7 +48,7 @@ const Notifications = {
     console.log("Next attempt will be a soft retry ✅");
   },
   spoofOnNextAttempt: () => {
-    console.log("Next attempt will be a soft retry ✅");
+    console.log("Next attempt will be spoofed ✅");
   },
   spoofStack: spoofStack => {
     console.log("spoofStack", spoofStack);
