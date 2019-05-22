@@ -13,11 +13,14 @@ export default class Automator {
   }) {
     this.inProgress = false;
     this.spoofStack = [];
+
     this.ensureWifiConnection = ensureWifiConnection;
     this.cliHooks = cliHooks;
     this.greaseMonkeyScript = greaseMonkeyScript;
     this.isInternetConnected = isInternetConnected;
 
+    // Setup hooks for CLI
+    this.cliHooks.spoofStack = this.spoofStack;
     this.start = this.start.bind(this);
   }
   async start() {
@@ -52,7 +55,6 @@ export default class Automator {
 
     // Setup hooks for CLI
     this.cliHooks.closeBrowser = closeBrowser;
-    this.cliHooks.spoofStack = this.spoofStack;
 
     try {
       await visit(NEVERSSL);
