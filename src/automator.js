@@ -1,16 +1,21 @@
 import Notifications from "./Notifications";
 import spoof from "./utils/spoof";
 import { initializeBrowser } from "./browser";
-import greaseMonkeyScript, { metadata } from "./lib/greaseMonkeyScript";
 
 const NEVERSSL = "http://neverssl.com";
 
 export default class Automator {
-  constructor({ ensureWifiConnection, isInternetConnected, cliHooks }) {
+  constructor({
+    ensureWifiConnection,
+    isInternetConnected,
+    cliHooks,
+    greaseMonkeyScript
+  }) {
     this.inProgress = false;
     this.spoofStack = [];
     this.ensureWifiConnection = ensureWifiConnection;
     this.cliHooks = cliHooks;
+    this.greaseMonkeyScript = greaseMonkeyScript;
     this.isInternetConnected = isInternetConnected;
 
     this.start = this.start.bind(this);
@@ -43,7 +48,7 @@ export default class Automator {
     } = await initializeBrowser();
 
     // Inject Scripts before navigation
-    injectScript(greaseMonkeyScript);
+    injectScript(this.greaseMonkeyScript);
 
     // Setup hooks for CLI
     this.cliHooks.closeBrowser = closeBrowser;
@@ -56,7 +61,7 @@ export default class Automator {
       // Early return to avoid timeout error
       if (process.env.DEBUG_MODE) return;
 
-      await waitUntil(metadata.completedUrl);
+      await waitUntil(this.greaseMonkeyScript.metadata.completedUrl);
     } catch (e) {
       Notifications.error(e);
     } finally {
