@@ -47,8 +47,6 @@ const Notifications = {
   },
   softRetryAttempt: () => {
     console.log("Attempting Soft Retry...");
-    console.log("Last spoofed:", spoofStack.pop());
-    console.log("Current time:", new Date());
   },
   softRetryOnNextAttempt: () => {
     console.log("Next attempt will be a soft retry ✅");
@@ -67,7 +65,7 @@ const Notifications = {
     console.log("Internet Connected: ✅");
   },
   internetConnectionStatus: success => {
-    console.log("Internet connected:", success ? "✅" : "❌");
+    console.log("Internet connected:", success ? "✅" : "❌", " ", Date.now());
   },
   internetConnectionAttemptFailed: () => {
     notifyer(`We've hit a snag, might need your input ⛔️`);

@@ -7,8 +7,9 @@ export const initializeBrowser = async () => {
   const page = await browser.newPage();
 
   const closeBrowser = async () => {
-    console.log("closing");
-    await page.close();
+    for (let page of await browser.pages()) {
+      await page.close();
+    }
     await browser.close();
   };
 

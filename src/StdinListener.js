@@ -28,14 +28,16 @@ const createStdinListner = () => {
       // with toString() and then trim()
 
       const input = d.toString().trim();
-      if (Boolean(input.match(/(soft)|(^sf$)/))) {
+      if (Boolean(input.match(/(^soft$)|(^sf$)/))) {
         emptySpoofStack();
         Hooks.spoofStack.push(new Date());
         Notifications.softRetryOnNextAttempt();
       } else if (Boolean(input.match(/(^reset$)|(^rs$)/))) {
         emptySpoofStack();
         Notifications.spoofOnNextAttempt();
-      } else if (Boolean(input.match(/(print spoof stack)|(^prs$)/))) {
+      } else if (Boolean(input.match(/(^prs$)/))) {
+        Notifications.spoofStack(Hooks.spoofStack);
+      } else if (Boolean(input.match(/(^spoof$)/))) {
         Notifications.spoofStack(Hooks.spoofStack);
       } else {
         console.log("You Typed:", input);

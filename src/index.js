@@ -34,7 +34,6 @@ bindHook({ spoofStack });
 (async () => {
   // stack trace details
   process.on("unhandledRejection", r => console.log(r));
-  process.on("exit", cleanUp);
 
   process.env.PASSWORD = await prompt("password: ", { method: "hide" });
   process.env.DEBUG_MODE = process.argv[2] === "debug" ? true : "";

@@ -41,15 +41,16 @@ const createAutomator = ({
 
     inProgress = true;
 
+    const {
+      injectScript,
+      waitUntil,
+      visit,
+      closeBrowser
+    } = await initializeBrowser();
+
     try {
       await spoofIfNeeded();
       await ensureWifiConnection();
-      const {
-        injectScript,
-        waitUntil,
-        visit,
-        closeBrowser
-      } = await initializeBrowser();
 
       addStopCB(closeBrowser);
 
@@ -63,7 +64,7 @@ const createAutomator = ({
     } catch (error) {
       Notifications.error(error);
     } finally {
-      closeBrowser();
+      await closeBrowser();
 
       if (await isInternetConnected()) {
         // Remove value to avoid soft retry next run
