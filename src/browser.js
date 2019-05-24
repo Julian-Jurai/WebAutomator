@@ -1,12 +1,13 @@
 import puppeteer from "puppeteer";
 import stringVoke from "./utils/stringVoke";
 
-const TIMEOUT = 90 * 1000;
-
 export const initializeBrowser = async () => {
+  const TIMEOUT = 90 * 1000;
   const browser = await puppeteer.launch({ headless: !process.env.DEBUG_MODE });
   const page = await browser.newPage();
+
   const closeBrowser = async () => {
+    console.log("closing");
     await page.close();
     await browser.close();
   };

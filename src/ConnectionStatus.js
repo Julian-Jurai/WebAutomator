@@ -2,136 +2,101 @@ import WiFiControl from "wifi-control";
 import ping from "net-ping";
 import Notifications from "./Notifications";
 
-const GOOGLE_DNS = "8.8.8.8";
+const createConnectionListner = ({ SSID }) => {
+  const GOOGLE_DNS = "8.8.8.8";
+  const session = ping.createSession();
 
-WiFiControl.init();
+  WiFiControl.init();
 
-class ConnectionStatus {
-  constructor({ SSID }) {
-    if (!SSID)
-      throw Error(
-        "Connection class could not be initialized argument SSID missing"
-      );
+  const attemptToConnectToAccessPoint = () => {
+    return new Promise(resolve => {
+      const ap = {
+        ssid: SSID
+      };
 
-    this.ssid = SSID;
-    this.debugModeEnabled = process.env.DEBUG_MODE;
-    this.session = ping.createSession();
+      const isResolved = false;
 
-    this.close = this.close.bind(this);
-    this.listener = this.listener.bind(this);
-    this.isInternetConnected = this.isInternetConnected.bind(this);
-    this.isWifiConnected = this.isWifiConnected.bind(this);
-    this.attemptToConnectToAccessPoint = this.attemptToConnectToAccessPoint.bind(
-      this
-    );
-    this.attemptToConnectToWifi = this.attemptToConnectToWifi.bind(this);
-  }
+      const resolvePromise = () => {
+        !isResolved && resolve();
+      };
 
-  listener({ onDisconnect }) {
-    setInterval(async () => {
-      if (this.isWifiConnected()) {
-        if (!(await this.isInternetConnected())) {
-          await onDisconnect();
+      setTimeout(resolvePromise, 2000);
+
+      WiFiControl.connectToAP(ap, (error, response) => {
+        resolvePromise();
+        if (error) {
+          Notifications.wifiiConnectAttemptFailed({ error, response });
         }
-      } else {
-        this.attemptToConnectToAccessPoint();
-      }
-    }, 3000);
-  }
-
-  close() {
-    // Reset WIFI Interface
-    this.debugModeEnabled &&
-      console.log("Attempting To Reset Network Interfaces...");
-    WiFiControl.resetWiFi((error, response) => {
-      if (error) Notifications.resetNetworkInterfaceError(error, response);
-    });
-
-    // Close Web Socket
-    this.session.close();
-  }
-
-  async attemptToConnectToWifi() {
-    let networkConnected = this.isWifiConnected();
-    let intervalTime = 20 * 1000;
-    let limit = 5;
-    let counter = 0;
-    let interval;
-
-    if (!networkConnected) {
-      await new Promise((resolve, reject) => {
-        interval = setInterval(() => {
-          counter += 1;
-          networkConnected = this.isWifiConnected();
-
-          if (counter > limit) {
-            throw Error("Timeout Error, Network Connection Not Established ❌");
-          }
-
-          if (networkConnected) {
-            clearInterval(interval);
-            resolve();
-          }
-        }, intervalTime);
       });
-    }
-  }
-
-  attemptToConnectToAccessPoint() {
-    this.debugModeEnabled && console.log("Attempting to connect to wifi...");
-
-    const ap = {
-      ssid: this.ssid
-    };
-
-    WiFiControl.connectToAP(ap, (error, response) => {
-      if (error) {
-        Notifications.wifiiConnectAttemptFailed(error);
-      }
-      this.debugModeEnabled &&
-        response &&
-        console.error("Wifi Connection Attempt succesful ✅");
     });
-  }
+  };
 
-  isWifiConnected() {
+  const isWifiConnected = async ({ shouldAttempt = true } = {}) => {
     const message = WiFiControl.getIfaceState();
     const isConnected = message.connection === "connected";
-    const isCorrectSSID = message.ssid === this.ssid;
+    const isCorrectSSID = SSID ? message.ssid === SSID : message.ssid;
     const isSuccess = message.success === true;
 
-    let success;
-
     if (isConnected && isSuccess) {
-      if (isCorrectSSID) {
-        success = true;
-      } else {
-        Notifications.incorrectSSIDConnection(this.ssid);
-      }
-    } else {
-      this.attemptToConnectToAccessPoint();
-      success = false;
+      if (!isCorrectSSID) Notifications.incorrectSSIDConnection(SSID);
+      return true;
     }
 
-    this.debugModeEnabled &&
-      console.log("Network Connected:", success ? "✅" : "❌");
-    return success;
-  }
+    try {
+      shouldAttempt && (await attemptToConnectToAccessPoint());
+    } catch (error) {
+      Notifications.error(error);
+    }
 
-  async isInternetConnected() {
+    return isWifiConnected({ shouldAttempt: false });
+  };
+
+  const isInternetConnected = async () => {
     return new Promise((resolve, reject) => {
-      this.session.pingHost(GOOGLE_DNS, (error, target) => {
+      session.pingHost(GOOGLE_DNS, (error, target) => {
         let success = true;
         if (error) {
-          this.debugModeEnabled &&
-            console.log(target + ": " + error.toString());
           success = false;
         }
         Notifications.internetConnectionStatus(success);
         resolve(success);
       });
     });
-  }
-}
+  };
 
-export default ConnectionStatus;
+  const listen = ({ onDisconnect }) => {
+    const listenCB = async () => {
+      let hasInternet;
+      let hasWifi = await isWifiConnected();
+
+      if (!hasWifi) return;
+
+      hasInternet = await isInternetConnected();
+
+      if (hasInternet) return;
+
+      await onDisconnect();
+    };
+
+    setInterval(listenCB, 3000);
+  };
+
+  const close = () => {
+    // Reset WIFI Interface
+    WiFiControl.resetWiFi((error, response) => {
+      if (error) Notifications.resetNetworkInterfaceError(error, response);
+    });
+
+    // Close Web Socket
+    session.close();
+  };
+
+  return {
+    close,
+    isInternetConnected,
+    isWifiConnected,
+    listen
+  };
+};
+
+export default createConnectionListner;

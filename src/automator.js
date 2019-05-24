@@ -2,83 +2,90 @@ import Notifications from "./Notifications";
 import spoof from "./utils/spoof";
 import { initializeBrowser } from "./browser";
 
-const NEVERSSL = "http://neverssl.com";
+const createAutomator = ({
+  isWifiConnected,
+  isInternetConnected,
+  greaseMonkeyScript
+}) => {
+  const NEVERSSL = "http://neverssl.com";
+  const spoofStack = [];
+  const stopCbs = [];
+  let inProgress = false;
 
-export default class Automator {
-  constructor({
-    ensureWifiConnection,
-    isInternetConnected,
-    cliHooks,
-    greaseMonkeyScript
-  }) {
-    this.inProgress = false;
-    this.spoofStack = [];
+  const addStopCB = cb => stopCbs.push(cb);
 
-    this.ensureWifiConnection = ensureWifiConnection;
-    this.cliHooks = cliHooks;
-    this.greaseMonkeyScript = greaseMonkeyScript;
-    this.isInternetConnected = isInternetConnected;
-
-    // Setup hooks for CLI
-    this.cliHooks.spoofStack = this.spoofStack;
-    this.start = this.start.bind(this);
-  }
-  async start() {
-    // Return if a session is already in progress
-    if (this.inProgress) return;
-
-    this.inProgress = true;
-
-    if (this.spoofStack.length > 1) {
-      Notifications.softRetryAttempt();
-    } else {
-      await spoof();
-      this.spoofStack.push(new Date());
-    }
-
+  const spoofIfNeeded = async () => {
     try {
-      await this.ensureWifiConnection();
+      if (spoofStack.length > 1) {
+        Notifications.softRetryAttempt();
+      } else {
+        await spoof();
+        spoofStack.push(new Date());
+      }
+    } catch (error) {
+      Notifications.error(error);
+    }
+  };
+
+  const ensureWifiConnection = async () => {
+    try {
+      await isWifiConnected();
       Notifications.networkConnected();
     } catch (error) {
       Notifications.wifiiConnectAttemptFailed(error);
     }
+  };
 
-    const {
-      injectScript,
-      closeBrowser,
-      waitUntil,
-      visit
-    } = await initializeBrowser();
+  const start = async () => {
+    if (inProgress) return;
 
-    // Inject Scripts before navigation
-    injectScript(this.greaseMonkeyScript);
-
-    // Setup hooks for CLI
-    this.cliHooks.closeBrowser = closeBrowser;
+    inProgress = true;
 
     try {
+      await spoofIfNeeded();
+      await ensureWifiConnection();
+      const {
+        injectScript,
+        waitUntil,
+        visit,
+        closeBrowser
+      } = await initializeBrowser();
+
+      addStopCB(closeBrowser);
+
+      // Inject Scripts before navigation
+      injectScript(greaseMonkeyScript);
+
       await visit(NEVERSSL);
       Notifications.navigatingToNeverSSL();
 
-      // Early return to avoid timeout error
-      if (process.env.DEBUG_MODE) return;
-
-      await waitUntil(this.greaseMonkeyScript.metadata.completedUrl);
-    } catch (e) {
-      Notifications.error(e);
+      await waitUntil(greaseMonkeyScript.metadata.completedUrl);
+    } catch (error) {
+      Notifications.error(error);
     } finally {
-      // Keep browser open when debugging
-      if (process.env.DEBUG_MODE) return;
+      closeBrowser();
 
-      await closeBrowser();
-
-      if (await this.isInternetConnected()) {
+      if (await isInternetConnected()) {
+        // Remove value to avoid soft retry next run
+        spoofStack.pop();
         Notifications.internetConnected();
-        this.spoofStack.pop();
       } else {
         Notifications.internetConnectionAttemptFailed();
       }
-      this.inProgress = false;
+
+      inProgress = false;
     }
-  }
-}
+  };
+
+  const stop = () => {
+    stopCbs.forEach(cb => cb && cb());
+  };
+
+  return {
+    start,
+    stop,
+    spoofStack
+  };
+};
+
+export default createAutomator;

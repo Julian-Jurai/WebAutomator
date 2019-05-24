@@ -23,21 +23,27 @@ const Notifications = {
   healthCheckInitialized: () => {
     console.log("Health Check Initialized ✅");
   },
+  invalidHookInitialized: key => {
+    console.log("Invalid Hook Provide of Key ❌ ", key);
+  },
   navigatingToNeverSSL: () => {
     console.log("Started Navigation To NeverSSL ✅");
   },
-  resetNetworkInterfaceError: (error, response) => {
+  resetNetworkInterfaceError: ({ error, response }) => {
     console.log("Reset Network Interfaces Error:", { error, response });
   },
   incorrectSSIDConnection: expectedSSID => {
     console.log(
-      "You are connected to the wrong network.Please ensure SSID matches the:",
+      "You are connected to the wrong network. Please ensure SSID matches the:",
       expectedSSID,
       "❌"
     );
   },
-  wifiiConnectAttemptFailed: error => {
-    console.error("Wifi Connection Attempt Unsuccesful ❌", error);
+  wifiiConnectAttemptFailed: ({ error, response }) => {
+    console.error("Wifi Connection Attempt Unsuccesful ❌", {
+      error,
+      response
+    });
   },
   softRetryAttempt: () => {
     console.log("Attempting Soft Retry...");
