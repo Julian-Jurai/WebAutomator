@@ -1,9 +1,9 @@
 import puppeteer from "puppeteer";
 import stringVoke from "./utils/stringVoke";
 
-export const initializeBrowser = async () => {
-  const TIMEOUT = 90 * 1000;
-  const browser = await puppeteer.launch({ headless: !process.env.DEBUG_MODE });
+export const createBrowser = async () => {
+  const TIMEOUT = 60 * 1000;
+  const browser = await puppeteer.launch({ headless: true });
   const page = await browser.newPage();
 
   const closeBrowser = async () => {
@@ -20,7 +20,7 @@ export const initializeBrowser = async () => {
     if (isUserDefinedMessage) console.log(msg);
   });
 
-  const injectScript = greaseMonkeyScript => {
+  const onPageLoadInjectScript = greaseMonkeyScript => {
     page.on("domcontentloaded", () =>
       page.addScriptTag({
         content: stringVoke(greaseMonkeyScript, {
@@ -30,7 +30,7 @@ export const initializeBrowser = async () => {
     );
   };
 
-  const visit = url => page.goto(url);
+  const visit = url => page.goto(url, { waitUntil: "networkidle2" });
 
   const waitUntil = async url =>
     await browser.waitForTarget(target => target.url() === url, {
@@ -39,5 +39,12 @@ export const initializeBrowser = async () => {
 
   page.setDefaultTimeout(TIMEOUT);
 
-  return { browser, page, visit, closeBrowser, injectScript, waitUntil };
+  return {
+    browser,
+    page,
+    visit,
+    closeBrowser,
+    onPageLoadInjectScript,
+    waitUntil
+  };
 };

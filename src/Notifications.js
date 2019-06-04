@@ -71,10 +71,7 @@ const Notifications = {
     notifyer(`We've hit a snag, might need your input ⛔️`);
   },
   error: error => {
-    console.error(
-      "An Error Was Encountered Before Target Was Reached ❌",
-      error
-    );
+    console.error("❌", error);
     console.trace(error.stack || error);
   }
 };

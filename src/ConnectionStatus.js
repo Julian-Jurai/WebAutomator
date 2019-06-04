@@ -37,18 +37,21 @@ const createConnectionListner = ({ SSID }) => {
     const isCorrectSSID = SSID ? message.ssid === SSID : message.ssid;
     const isSuccess = message.success === true;
 
-    if (isConnected && isSuccess) {
-      if (!isCorrectSSID) Notifications.incorrectSSIDConnection(SSID);
-      return true;
-    }
-
     try {
-      shouldAttempt && (await attemptToConnectToAccessPoint());
+      if (isConnected && isSuccess) {
+        if (!isCorrectSSID) Notifications.incorrectSSIDConnection(SSID);
+        return true;
+      }
+
+      if (shouldAttempt) {
+        await attemptToConnectToAccessPoint();
+        return await isWifiConnected({ shouldAttempt: false });
+      }
     } catch (error) {
       Notifications.error(error);
     }
 
-    return isWifiConnected({ shouldAttempt: false });
+    return false;
   };
 
   const isInternetConnected = async () => {
@@ -68,7 +71,6 @@ const createConnectionListner = ({ SSID }) => {
     const listenCB = async () => {
       let hasInternet;
       let hasWifi = await isWifiConnected();
-
       if (!hasWifi) return;
 
       hasInternet = await isInternetConnected();

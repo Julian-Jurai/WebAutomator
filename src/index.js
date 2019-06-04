@@ -16,7 +16,7 @@ const {
   listen: listenToConnection
 } = createConnectionListner({ SSID, onDisconnect });
 
-const { start: onDisconnect, spoofStack, stop } = createAutomator({
+const { start: onDisconnect, spoofStack } = createAutomator({
   isWifiConnected,
   isInternetConnected,
   greaseMonkeyScript,
@@ -25,8 +25,6 @@ const { start: onDisconnect, spoofStack, stop } = createAutomator({
 
 const cleanUp = () => {
   close();
-  stop();
-  console.log("cleaning up");
 };
 
 bindHook({ spoofStack });

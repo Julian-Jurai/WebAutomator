@@ -1,6 +1,6 @@
 import Notifications from "./Notifications";
 import spoof from "./utils/spoof";
-import { initializeBrowser } from "./browser";
+import { createBrowser } from "./browser";
 
 const createAutomator = ({
   isWifiConnected,
@@ -9,10 +9,7 @@ const createAutomator = ({
 }) => {
   const NEVERSSL = "http://neverssl.com";
   const spoofStack = [];
-  const stopCbs = [];
-  let inProgress = false;
-
-  const addStopCB = cb => stopCbs.push(cb);
+  var inProgress = false;
 
   const spoofIfNeeded = async () => {
     try {
@@ -20,19 +17,11 @@ const createAutomator = ({
         Notifications.softRetryAttempt();
       } else {
         await spoof();
+        console.log("Spoofed ✅");
         spoofStack.push(new Date());
       }
     } catch (error) {
       Notifications.error(error);
-    }
-  };
-
-  const ensureWifiConnection = async () => {
-    try {
-      await isWifiConnected();
-      Notifications.networkConnected();
-    } catch (error) {
-      Notifications.wifiiConnectAttemptFailed(error);
     }
   };
 
@@ -42,49 +31,41 @@ const createAutomator = ({
     inProgress = true;
 
     const {
-      injectScript,
+      onPageLoadInjectScript,
       waitUntil,
       visit,
       closeBrowser
-    } = await initializeBrowser();
+    } = await createBrowser();
 
+    await spoofIfNeeded();
+
+    // If wifii is not connected stop execution
+    if (!(await isWifiConnected())) return;
+
+    // Start Navigation
     try {
-      await spoofIfNeeded();
-      await ensureWifiConnection();
-
-      addStopCB(closeBrowser);
-
-      // Inject Scripts before navigation
-      injectScript(greaseMonkeyScript);
-
+      onPageLoadInjectScript(greaseMonkeyScript);
       await visit(NEVERSSL);
       Notifications.navigatingToNeverSSL();
-
       await waitUntil(greaseMonkeyScript.metadata.completedUrl);
     } catch (error) {
       Notifications.error(error);
     } finally {
       await closeBrowser();
-
-      if (await isInternetConnected()) {
-        // Remove value to avoid soft retry next run
-        spoofStack.pop();
-        Notifications.internetConnected();
-      } else {
-        Notifications.internetConnectionAttemptFailed();
-      }
-
       inProgress = false;
     }
-  };
 
-  const stop = () => {
-    stopCbs.forEach(cb => cb && cb());
+    if (await isInternetConnected()) {
+      // Remove value to avoid soft retry next run
+      spoofStack.pop();
+      Notifications.internetConnected();
+    } else {
+      Notifications.internetConnectionAttemptFailed();
+    }
   };
 
   return {
     start,
-    stop,
     spoofStack
   };
 };
