@@ -11,10 +11,17 @@ const createAutomator = ({
   const spoofStack = [];
   var inProgress = false;
 
+  const emptySpoofStack = () => {
+    while (spoofStack.length > 0) {
+      spoofStack.pop();
+    }
+  };
+
   const spoofIfNeeded = async () => {
     try {
       if (spoofStack.length > 1) {
         Notifications.softRetryAttempt();
+        emptySpoofStack();
       } else {
         await spoof();
         console.log("Spoofed ✅");
@@ -25,10 +32,11 @@ const createAutomator = ({
     }
   };
 
-  const start = async () => {
-    if (inProgress) return;
+  const run = async () => {
+    await spoofIfNeeded();
 
-    inProgress = true;
+    // If wifii is not connected stop execution
+    if (!(await isWifiConnected())) return;
 
     const {
       onPageLoadInjectScript,
@@ -36,11 +44,6 @@ const createAutomator = ({
       visit,
       closeBrowser
     } = await createBrowser();
-
-    await spoofIfNeeded();
-
-    // If wifii is not connected stop execution
-    if (!(await isWifiConnected())) return;
 
     // Start Navigation
     try {
@@ -52,15 +55,27 @@ const createAutomator = ({
       Notifications.error(error);
     } finally {
       await closeBrowser();
-      inProgress = false;
     }
 
     if (await isInternetConnected()) {
       // Remove value to avoid soft retry next run
-      spoofStack.pop();
+      emptySpoofStack();
       Notifications.internetConnected();
     } else {
       Notifications.internetConnectionAttemptFailed();
+    }
+  };
+
+  const start = async () => {
+    if (inProgress) return;
+    inProgress = true;
+    try {
+      console.log("running...");
+      await run();
+    } catch (error) {
+      Notifications.error(error);
+    } finally {
+      inProgress = false;
     }
   };
 
