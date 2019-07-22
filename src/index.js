@@ -5,7 +5,7 @@ import greaseMonkeyScript from "./lib/greaseMonkeyScript";
 import createAutomator from "./Automator";
 import createStdinListner from "./StdinListener";
 
-import CliTable from "./consoleTable";
+import ConsoleTable from "./ConsoleTable";
 
 const { SSID } = greaseMonkeyScript.metadata;
 
@@ -37,7 +37,9 @@ bindHook({ spoofStack });
 
   process.env.PASSWORD = await prompt("password: ", { method: "hide" });
   process.env.DEBUG_MODE = process.argv[2] === "debug" ? true : "";
-  CliTable.print();
+
+  setInterval(ConsoleTable.print, 2000);
+
   listenToConnection({ onDisconnect });
   listenToStdin();
 })();

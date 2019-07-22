@@ -1,5 +1,6 @@
 import puppeteer from "puppeteer";
 import stringVoke from "./utils/stringVoke";
+import ConsoleTable from "./ConsoleTable";
 
 export const createBrowser = async () => {
   const TIMEOUT = 60 * 1000;
@@ -17,7 +18,7 @@ export const createBrowser = async () => {
   page.on("console", consoleObj => {
     const msg = consoleObj.text();
     const isUserDefinedMessage = msg.slice(0, 2) == "GM";
-    if (isUserDefinedMessage) console.log(msg);
+    if (isUserDefinedMessage) ConsoleTable.setCurrentStep(msg);
   });
 
   const onPageLoadInjectScript = greaseMonkeyScript => {

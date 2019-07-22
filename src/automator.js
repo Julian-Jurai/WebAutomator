@@ -1,6 +1,7 @@
 import Notifications from "./Notifications";
 import spoof from "./utils/spoof";
 import { createBrowser } from "./browser";
+import ConsoleTable from "./ConsoleTable";
 
 const createAutomator = ({
   isWifiConnected,
@@ -20,11 +21,11 @@ const createAutomator = ({
   const spoofIfNeeded = async () => {
     try {
       if (spoofStack.length > 1) {
-        Notifications.softRetryAttempt();
+        ConsoleTable.setCurrentStep("Soft Retry");
         emptySpoofStack();
       } else {
         await spoof();
-        console.log("Spoofed ✅");
+        ConsoleTable.setCurrentStep("Spoofed");
         spoofStack.push(new Date());
       }
     } catch (error) {
@@ -49,7 +50,7 @@ const createAutomator = ({
     try {
       onPageLoadInjectScript(greaseMonkeyScript);
       await visit(NEVERSSL);
-      Notifications.navigatingToNeverSSL();
+      ConsoleTable.setCurrentStep("/GET neverssl.com");
       await waitUntil(greaseMonkeyScript.metadata.completedUrl);
     } catch (error) {
       Notifications.error(error);
@@ -60,9 +61,11 @@ const createAutomator = ({
     if (await isInternetConnected()) {
       // Remove value to avoid soft retry next run
       emptySpoofStack();
-      Notifications.internetConnected();
+      ConsoleTable.setCurrentStep("Automator Run Success");
+      ConsoleTable.setCurrentStep("");
+      ConsoleTable.setError("");
     } else {
-      Notifications.internetConnectionAttemptFailed();
+      ConsoleTable.setCurrentStep("Automator Run Failure");
     }
   };
 
@@ -70,7 +73,7 @@ const createAutomator = ({
     if (inProgress) return;
     inProgress = true;
     try {
-      console.log("running...");
+      ConsoleTable.setCurrentStep("Automator Start");
       await run();
     } catch (error) {
       Notifications.error(error);

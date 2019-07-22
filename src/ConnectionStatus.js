@@ -1,6 +1,7 @@
 import WiFiControl from "wifi-control";
 import ping from "net-ping";
 import Notifications from "./Notifications";
+import ConsoleTable from "./ConsoleTable";
 
 const createConnectionListner = ({ SSID }) => {
   const GOOGLE_DNS = "8.8.8.8";
@@ -45,12 +46,12 @@ const createConnectionListner = ({ SSID }) => {
 
       if (shouldAttempt) {
         await attemptToConnectToAccessPoint();
-        return await isWifiConnected({ shouldAttempt: false });
+        const hasWifi = await isWifiConnected({ shouldAttempt: false });
+        return hasWifi
       }
     } catch (error) {
       Notifications.error(error);
     }
-
     return false;
   };
 
@@ -61,7 +62,6 @@ const createConnectionListner = ({ SSID }) => {
         if (error) {
           success = false;
         }
-        Notifications.internetConnectionStatus(success);
         resolve(success);
       });
     });
@@ -71,9 +71,14 @@ const createConnectionListner = ({ SSID }) => {
     const listenCB = async () => {
       let hasInternet;
       let hasWifi = await isWifiConnected();
+
+      ConsoleTable.setHasWifi(hasWifi);
+
       if (!hasWifi) return;
 
       hasInternet = await isInternetConnected();
+
+      ConsoleTable.setHasWifi(hasInternet);
 
       if (hasInternet) return;
 
