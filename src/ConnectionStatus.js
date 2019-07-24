@@ -78,7 +78,7 @@ const createConnectionListner = ({ SSID }) => {
 
       hasInternet = await isInternetConnected();
 
-      ConsoleTable.setHasWifi(hasInternet);
+      ConsoleTable.setHasInternet(hasInternet);
 
       if (hasInternet) return;
 
