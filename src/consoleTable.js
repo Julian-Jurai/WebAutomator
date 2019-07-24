@@ -47,11 +47,11 @@ function ConsoleTable() {
   };
   this.print = () => {
     setPerformanceValues(performanceTableRow);
-    console.clear(); //TODO Doesn't clear scroll back
-
+    console.clear();
     console.log(this.table.toString());
     console.log(this.performanceTable.toString());
     console.log(this.errorTable.toString());
+    process.stdout.write("\u001b[3J"); // clears scroll back
   };
 }
 
