@@ -1,11 +1,28 @@
 import Table from "cli-table";
 
-const setPerformanceValues = performanceTableRow => {
-  performanceTableRow[0] = process.uptime();
+const formatTimeUnitToString = num => (num < 10 ? "0" + num.toString() : num);
 
+const formatSeconds = secondsFloat => {
+  const seconds = Math.floor(secondsFloat) % 60;
+  const minutes = Math.floor((secondsFloat / 60) % 60);
+  const hours = Math.floor(secondsFloat / (60 * 60));
+
+  return (
+    formatTimeUnitToString(hours) +
+    ":" +
+    formatTimeUnitToString(minutes) +
+    ":" +
+    formatTimeUnitToString(seconds)
+  );
+};
+
+const setPerformanceValues = performanceTableRow => {
+  const uptime = process.uptime();
   const { heapUsed, heapTotal, external } = process.memoryUsage();
 
-  performanceTableRow[1] = ((heapUsed + external) / heapTotal).toFixed(4) + "%";
+  performanceTableRow[0] = formatSeconds(uptime);
+  performanceTableRow[1] =
+    ((heapUsed + external) / heapTotal).toFixed(4) + " %";
 };
 
 function ConsoleTable() {
@@ -26,7 +43,7 @@ function ConsoleTable() {
   });
 
   this.performanceTable = new Table({
-    head: ["Uptime (s)", "Memory Usage (% rss)"],
+    head: ["Uptime (h:m:s)", "Memory Usage (% of rss)"],
     colWidths: [25, 26]
   });
 
@@ -43,7 +60,8 @@ function ConsoleTable() {
   this.setHasInternet = bool => (tableRow[1] = bool ? "✅" : "❌");
   this.setCurrentStep = stepName => (tableRow[2] = stepName || "N/A");
   this.setError = error => {
-    errorTableRow[0] = error instanceof Error ? error.toString() : error;
+    errorTableRow[0] =
+      error instanceof Error ? error.toString() : JSON.stringify(error);
   };
   this.print = () => {
     setPerformanceValues(performanceTableRow);
