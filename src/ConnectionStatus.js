@@ -47,7 +47,7 @@ const createConnectionListner = ({ SSID }) => {
       if (shouldAttempt) {
         await attemptToConnectToAccessPoint();
         const hasWifi = await isWifiConnected({ shouldAttempt: false });
-        return hasWifi
+        return hasWifi;
       }
     } catch (error) {
       Notifications.error(error);
@@ -74,7 +74,10 @@ const createConnectionListner = ({ SSID }) => {
 
       ConsoleTable.setHasWifi(hasWifi);
 
-      if (!hasWifi) return;
+      if (!hasWifi) {
+        ConsoleTable.setHasInternet(false);
+        return;
+      }
 
       hasInternet = await isInternetConnected();
 

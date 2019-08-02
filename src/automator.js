@@ -50,6 +50,7 @@ const createAutomator = ({
     try {
       onPageLoadInjectScript(greaseMonkeyScript);
       await visit(NEVERSSL);
+      ConsoleTable.resetCompletedAt();
       ConsoleTable.setCurrentStep("/GET neverssl.com");
       await waitUntil(greaseMonkeyScript.metadata.completedUrl);
     } catch (error) {

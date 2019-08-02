@@ -16,6 +16,11 @@ const formatSeconds = secondsFloat => {
   );
 };
 
+const calculateSessionTime = dateObj => {
+  const secondsFloat = (new Date().getTime() - dateObj.getTime()) / 1000;
+  return formatSeconds(secondsFloat);
+};
+
 const setPerformanceValues = performanceTableRow => {
   const uptime = process.uptime();
   const { heapUsed, heapTotal, external } = process.memoryUsage();
@@ -33,23 +38,23 @@ function ConsoleTable() {
     // oGConsoleError(...msg);
   };
 
-  const tableRow = ["N/A", "N/A", "N/A"];
+  const tableRow = ["N/A", "N/A", "N/A", "N/A"];
   const performanceTableRow = ["N/A", "N/A"];
   const errorTableRow = ["N/A"];
 
   this.table = new Table({
-    head: ["Wifi", "Internet", "Current Step"],
-    colWidths: [10, 10, 30]
+    head: ["Wifi", "Internet", "Session Time", "Current Step"],
+    colWidths: [10, 10, 15, 30]
   });
 
   this.performanceTable = new Table({
-    head: ["Uptime (h:m:s)", "Memory Usage (% of rss)"],
-    colWidths: [25, 26]
+    head: ["Uptime (h:m:s)", "Memory Usage (% of heap)"],
+    colWidths: [40, 27]
   });
 
   this.errorTable = new Table({
     head: ["Error Message"],
-    colWidths: [52]
+    colWidths: [68]
   });
 
   this.table.push(tableRow);
@@ -58,13 +63,20 @@ function ConsoleTable() {
 
   this.setHasWifi = bool => (tableRow[0] = bool ? "✅" : "❌");
   this.setHasInternet = bool => (tableRow[1] = bool ? "✅" : "❌");
-  this.setCurrentStep = stepName => (tableRow[2] = stepName || "N/A");
+  this.setCurrentStep = stepName => (tableRow[3] = stepName || "N/A");
+  this.resetCompletedAt = () => (this.completedAt = null);
+  this.setCompletedAt = () => (this.completedAt = new Date());
+  this.setSessionTime = () =>
+    (tableRow[2] = this.completedAt
+      ? calculateSessionTime(this.completedAt)
+      : "N/A");
   this.setError = error => {
     errorTableRow[0] =
       error instanceof Error ? error.toString() : JSON.stringify(error);
   };
   this.print = () => {
     setPerformanceValues(performanceTableRow);
+    this.setSessionTime();
     console.clear();
     console.log(this.table.toString());
     console.log(this.performanceTable.toString());

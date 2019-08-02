@@ -19,6 +19,8 @@ export const createBrowser = async () => {
     const msg = consoleObj.text();
     const isUserDefinedMessage = msg.slice(0, 2) == "GM";
     if (isUserDefinedMessage) ConsoleTable.setCurrentStep(msg);
+    if (isUserDefinedMessage && msg.includes("Completeing"))
+      ConsoleTable.setCompletedAt();
   });
 
   const onPageLoadInjectScript = greaseMonkeyScript => {
