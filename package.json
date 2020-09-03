@@ -16,7 +16,7 @@
     "net-ping": "^1.2.3",
     "node-notifier": "^5.4.0",
     "password-prompt": "^1.0.7",
-    "puppeteer": "^1.12.1",
+    "puppeteer": "^1.13.0",
     "spoof": "2.0.1",
     "wifi-control": "^2.0.1"
   },
